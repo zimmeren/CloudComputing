@@ -1,0 +1,15 @@
+#directories
+CloudCapstone/data
+CloudCapstone/awsKeys
+Networking
+
+#osx
+.DS_Store
+
+#eclipse
+*.class
+.classpath
+.Settings
+.loadpath
+.project
+.metadata

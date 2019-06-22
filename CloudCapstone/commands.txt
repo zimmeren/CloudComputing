@@ -1,0 +1,13 @@
+Commands used for Coursera Cloud Capstone
+
+//connect amazon EBS volume snapshot to ec2 instance
+lsblk //used to find volume location on ec2
+mkdir data //used to created directory to mount volume
+mount /dev/xvdf ~/data //used to mount the volume
+
+//Copying data from ec2 to s3
+unzip -o "*.zip"
+aws s3 cp ~/data/airline_ontime/2008 s3://coursera-cloud-capstone-airline-ontime-data --recursive --exclude "*" --include "*.csv"
+aws s3 cp ~/data/aviation_support_tables/Aircraft\ Types s3://coursera-cloud-capstone-airline-ontime-data-support --recursive --exclude "*" --include "*.csv"
+aws s3 cp ~/data/aviation_support_tables/Carrier\ Decode s3://coursera-cloud-capstone-airline-ontime-data-support --recursive --exclude "*" --include "*.csv
+aws s3 cp ~/data/aviation_support_tables/Master\ Coordinate s3://coursera-cloud-capstone-airline-ontime-data-support --recursive --exclude "*" --include "*.csv"
