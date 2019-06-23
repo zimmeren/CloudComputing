@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -16,54 +16,53 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class PopularAirports {
-	public static class AirportMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-
-		private final static IntWritable one = new IntWritable(1);
-		private Text origin = new Text();
-		private Text dest = new Text();
+public class AirlineDelays {
+	public static class AirlineMapper extends Mapper<LongWritable, Text, Text, FloatWritable> {
+		private Text airline = new Text();
+		private FloatWritable delay = new FloatWritable();
 
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			AirlineOntimeEntry entry = new AirlineOntimeEntry();
 			entry.parseEntry(value.toString());
 			if (entry.valid) {
-				origin.set(entry.origin);
-				context.write(origin, one);
-				dest.set(entry.dest);
-				context.write(dest, one);
+				airline.set(entry.carrier);
+				delay.set(entry.arrDelay);
+				context.write(airline, delay);
 			}
 		}
 	}
 
-	public static class AirportSumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
-		private IntWritable result = new IntWritable();
+	public static class AirlineSumReducer extends Reducer<Text, FloatWritable, Text, FloatWritable> {
+		private FloatWritable result = new FloatWritable();
 
-		public void reduce(Text key, Iterable<IntWritable> values, Context context)
+		public void reduce(Text key, Iterable<FloatWritable> values, Context context)
 				throws IOException, InterruptedException {
-			int sum = 0;
-			for (IntWritable val : values) {
-				sum += val.get();
+			float average = 0;
+			float size = 0;
+			for (FloatWritable val : values) {
+				average += val.get();
+				size++;
 			}
-			result.set(sum);
+			result.set(average / size);
 			context.write(key, result);
 		}
 	}
 	
-	public static class PopularMapper extends Mapper<Text, Text, IntWritable, Text> {
+	public static class SortMapper extends Mapper<Text, Text, FloatWritable, Text> {
 
-		private final static IntWritable amount = new IntWritable();
+		private final static FloatWritable amount = new FloatWritable();
 
 		public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-			int occurs = Integer.parseInt(value.toString());
+			float occurs = Float.parseFloat(value.toString());
 			amount.set(occurs);
 			context.write(amount, key);
 		}
 	}
 
-	public static class PopularReducer extends Reducer<IntWritable, Text, IntWritable, Text> {
+	public static class SortReducer extends Reducer<FloatWritable, Text, FloatWritable, Text> {
 		private Text result = new Text();
 
-		public void reduce(IntWritable key, Iterable<Text> values, Context context)
+		public void reduce(FloatWritable key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
 			for (Text val : values) {
 				result.set(val);
@@ -78,11 +77,10 @@ public class PopularAirports {
 		Configuration conf1 = new Configuration();
 		Job job1 = Job.getInstance(conf1, "Popular Airports");
 		job1.setJarByClass(PopularAirports.class);
-		job1.setMapperClass(AirportMapper.class);
-		job1.setCombinerClass(AirportSumReducer.class);
-		job1.setReducerClass(AirportSumReducer.class);
+		job1.setMapperClass(AirlineMapper.class);
+		job1.setReducerClass(AirlineSumReducer.class);
 		job1.setOutputKeyClass(Text.class);
-		job1.setOutputValueClass(IntWritable.class);
+		job1.setOutputValueClass(FloatWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job1, new Path(args[1] + "/temp"));
 		ControlledJob controlledJob1 = new ControlledJob(conf1);
@@ -93,10 +91,9 @@ public class PopularAirports {
 		Job job2 = Job.getInstance(conf2, "Sorted Airports");
 		job2.setJarByClass(PopularAirports.class);
 		job2.setInputFormatClass(KeyValueTextInputFormat.class);
-		job2.setMapperClass(PopularMapper.class);
-		job2.setCombinerClass(PopularReducer.class);
-		job2.setReducerClass(PopularReducer.class);
-		job2.setOutputKeyClass(IntWritable.class);
+		job2.setMapperClass(SortMapper.class);
+		job2.setReducerClass(SortReducer.class);
+		job2.setOutputKeyClass(FloatWritable.class);
 		job2.setOutputValueClass(Text.class);
 		job2.setNumReduceTasks(1);
 		FileInputFormat.addInputPath(job2, new Path(args[1] + "/temp"));
