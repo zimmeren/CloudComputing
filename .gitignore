@@ -13,3 +13,6 @@ Networking
 .loadpath
 .project
 .metadata
+
+#vscode
+.vscode
