@@ -12,3 +12,7 @@ aws s3 cp ~/data/aviation_support_tables/Aircraft\ Types s3://coursera-cloud-cap
 aws s3 cp ~/data/aviation_support_tables/Carrier\ Decode s3://coursera-cloud-capstone-airline-ontime-data-support --recursive --exclude "*" --include "*.csv
 aws s3 cp ~/data/aviation_support_tables/Master\ Coordinate s3://coursera-cloud-capstone-airline-ontime-data-support --recursive --exclude "*" --include "*.csv"
 aws s3 cp ~/data/clean s3://coursera-cloud-capstone-airline-ontime-data/clean --recursive
+
+//argument for EMR
+s3://coursera-cloud-capstone-airline-ontime-data/clean s3://coursera-cloud-capstone-airline-ontime-data/output/G1Q1
+s3://coursera-cloud-capstone-airline-ontime-data/clean-g3q2 s3://coursera-cloud-capstone-airline-ontime-data/output/G3Q2
